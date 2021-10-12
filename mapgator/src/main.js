@@ -3,6 +3,7 @@ import App from './App.vue'
 import vuetify from './plugins/vuetify'
 import 'leaflet/dist/leaflet.css';
 import { Icon } from 'leaflet';
+import router from './router'
 
 
 delete Icon.Default.prototype._getIconUrl;
@@ -15,5 +16,6 @@ Vue.config.productionTip = false
 
 new Vue({
   vuetify,
+  router,
   render: h => h(App)
 }).$mount('#app')

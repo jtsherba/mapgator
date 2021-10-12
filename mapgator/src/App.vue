@@ -60,9 +60,26 @@
                   color="grey lighten-4"
                 >
                   <v-list-item-content>
-                    <v-list-item-title>
-                      Refresh
-                    </v-list-item-title>
+                      <div class="text-center">
+                        <v-btn
+                          class="ma-2"
+                          :loading="loading"
+                          :disabled="loading"
+                          color="secondary"
+                          @click="runSummary"
+                        >
+                          Get Data
+                        </v-btn>
+                         <v-btn
+                          class="ma-2"
+                          :loading="loading"
+                          :disabled="loading"
+                          color="secondary"
+                          @click="loader = 'loading'"
+                        >
+                          Reset
+                        </v-btn>
+                       </div>
                   </v-list-item-content>
                 </v-list-item>
               </v-list>
@@ -86,6 +103,7 @@
 </template>
 
 <script>
+  import axios from 'axios';
   import shp from 'shpjs';
   import LeafletMap from './components/LeafletMap';
   export default {
@@ -103,8 +121,8 @@
       ],
       geojson:null,
       chosenFile: null,
+      msg:null,
     }),
-
   methods:{
     onAddFiles() {
       //for the shapefiles in the files folder called pandr.shp
@@ -119,7 +137,37 @@
             this.geojson=geojson
             });
           }
-        }
+        },
+    getMessage() {
+      const path = 'http://localhost:5000/ping';
+      axios.get(path)
+        .then((res) => {
+          this.msg = res.data;
+          console.log(this.msg)
+        })
+        .catch((error) => {
+          // eslint-disable-next-line
+          console.error(error);
+        });
+    },
+    async runSummary(){
+      const response = await fetch("https://api.census.gov/data/2019/acs/acs5/variables.json");
+      let data = await response.json();
+      //let censusVariable = data["variables"]
+       const path = 'http://localhost:5000/ping';
+      axios.get(path)
+        .then((res) => {
+          this.msg = res.data;
+          console.log(this.msg)
+          console.log(data)
+        })
+        .catch((error) => {
+          // eslint-disable-next-line
+          console.error(error);
+        });
+         }, 
+
+    
        }
     }
 </script>

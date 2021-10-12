@@ -8,7 +8,8 @@
     </div>
     <l-map
       :zoom="zoom"
-      :center="center"
+      
+      :bounds="bounds"  
       style="height: 500px; width: 100%"
     >
       <l-tile-layer
@@ -21,34 +22,34 @@
         :options="options"
         :options-style="styleFunction"
       />
-      <l-marker :lat-lng="marker" />
     </l-map>
   </div>
 </template>
 
 <script>
-import { LMap, LTileLayer, LMarker, LGeoJson } from "vue2-leaflet";
+import { LMap, LTileLayer, LGeoJson } from "vue2-leaflet";
+import { latLngBounds } from "leaflet";
 import * as turf from '@turf/turf'
 export default {
   name: "Example",
   props: {name:Object},
   watch: {
     name(val) {
-      console.log(JSON.parse(JSON.stringify(val)))
+      this.loading = true;
       this.geojson = JSON.parse(JSON.stringify( val));
-      
-      let centerjson = turf.center(JSON.parse(JSON.stringify( val)))
-      console.log(centerjson["geometry"]["coordinates"])
-
-      this.center =[centerjson["geometry"]["coordinates"][1], centerjson["geometry"]["coordinates"][0]]
-     
+      let bbox = turf.bbox(this.geojson);
+      let latlngbbox = latLngBounds([
+        [bbox[1], bbox[0]],
+        [bbox[3], bbox[2]]
+      ])
+      this.bounds=latlngbbox
+      this.loading = false;
     }
   },  
   components: {
     LMap,
     LTileLayer,
     LGeoJson,
-    LMarker
   },
   data() {
     return {
@@ -56,7 +57,11 @@ export default {
       show: true,
       enableTooltip: true,
       zoom: 6,
-      center: [38, -122.2],
+      //center: [38, -122.2],
+      bounds: latLngBounds([
+        [49, -66],
+        [25, -124]
+      ]),
       geojson: null,
       fillColor: "#e4ce7f",
       url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -89,23 +94,24 @@ export default {
       }
       return (feature, layer) => {
         layer.bindTooltip(
-          "<div>code:" +
-            feature.properties.code +
-            "</div><div>nom: " +
-            feature.properties.nom +
-            "</div>",
+          "<div>"+feature.properties+"</div>",
+          //"<div>code:" +
+           // feature.properties.code +
+           // "</div><div>nom: " +
+           // feature.properties.nom +
+           // "</div>",
           { permanent: false, sticky: true }
         );
       };
     }
   },
   async created() {
-    this.loading = true;
-    const response = await fetch("https://rawgit.com/gregoiredavid/france-geojson/master/regions/pays-de-la-loire/communes-pays-de-la-loire.geojson")
-    const data = await response.json();
-    console.log(data)
-    this.geojson = data;
-    this.loading = false;
+    //this.loading = true;
+    //const response = await fetch("https://rawgit.com/gregoiredavid/france-geojson/master/regions/pays-de-la-loire/communes-pays-de-la-loire.geojson")
+    //const data = await response.json();
+    //console.log(data)
+    //this.geojson = data;
+    //this.loading = false;
   }
 };
 </script>
