@@ -11,6 +11,7 @@
     "@turf/turf": "^6.5.0",
     "core-js": "^3.6.5",
     "leaflet": "^1.7.1",
+    "shpjs": "^4.0.2",
     "vue": "^2.6.11",
     "vue2-leaflet": "^2.7.1",
     "vuetify": "^2.4.0"

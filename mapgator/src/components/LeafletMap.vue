@@ -1,3 +1,4 @@
+
 <template>
 
   <div>
@@ -27,9 +28,22 @@
 
 <script>
 import { LMap, LTileLayer, LMarker, LGeoJson } from "vue2-leaflet";
-
+import * as turf from '@turf/turf'
 export default {
   name: "Example",
+  props: {name:Object},
+  watch: {
+    name(val) {
+      console.log(JSON.parse(JSON.stringify(val)))
+      this.geojson = JSON.parse(JSON.stringify( val));
+      
+      let centerjson = turf.center(JSON.parse(JSON.stringify( val)))
+      console.log(centerjson["geometry"]["coordinates"])
+
+      this.center =[centerjson["geometry"]["coordinates"][1], centerjson["geometry"]["coordinates"][0]]
+     
+    }
+  },  
   components: {
     LMap,
     LTileLayer,
@@ -42,7 +56,7 @@ export default {
       show: true,
       enableTooltip: true,
       zoom: 6,
-      center: [48, -1.219482],
+      center: [38, -122.2],
       geojson: null,
       fillColor: "#e4ce7f",
       url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -89,6 +103,7 @@ export default {
     this.loading = true;
     const response = await fetch("https://rawgit.com/gregoiredavid/france-geojson/master/regions/pays-de-la-loire/communes-pays-de-la-loire.geojson")
     const data = await response.json();
+    console.log(data)
     this.geojson = data;
     this.loading = false;
   }

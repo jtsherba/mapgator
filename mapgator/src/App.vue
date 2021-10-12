@@ -29,10 +29,29 @@
     <v-main class="grey lighten-3">
       <v-container>
         <v-row>
-          <v-col cols="2">
+          <v-col cols="4">
             <v-sheet rounded="lg">
               <v-list color="transparent">
-                
+                <v-list-item
+                  link
+                  color="grey lighten-4"
+                >
+                  <v-list-item-content>
+                    <v-list-item-title>
+                      Add a boundary shapefile
+                    </v-list-item-title>
+                      <v-file-input
+                      show-size
+                      :rules="rules"
+                      accept=".zip"
+                      placeholder="Pick an zipped shapefile"
+                      prepend-icon="mdi-map"
+                      label="Shapefile"
+                      v-model="chosenFile"
+                      @change="onAddFiles"
+                    ></v-file-input>
+                  </v-list-item-content>
+                </v-list-item>
 
                 <v-divider class="my-2"></v-divider>
 
@@ -55,8 +74,7 @@
               min-height="70vh"
               rounded="lg"
             >
-              <LeafletMap
-                max-height="70vh"
+              <LeafletMap :name="geojson"
               > </LeafletMap> 
                
             </v-sheet>
@@ -68,6 +86,7 @@
 </template>
 
 <script>
+  import shp from 'shpjs';
   import LeafletMap from './components/LeafletMap';
   export default {
     name: 'app',
@@ -75,10 +94,32 @@
     LeafletMap
     },
     data: () => ({
+      rules: [
+        value => !value || value.size < 2000000000 || 'File size should be less than 2 MB!',
+      ],
       links: [
         'Profile',
         'Updates',
       ],
+      geojson:null,
+      chosenFile: null,
     }),
-  }
+
+  methods:{
+    onAddFiles() {
+      //for the shapefiles in the files folder called pandr.shp
+         
+          let reader = new FileReader()
+          reader.readAsArrayBuffer(this.chosenFile)
+          reader.onload = () => {
+            this.data = reader.result;
+             shp(this.data).then((geojson) => {
+            console.log(geojson)
+            //see bellow for whats here this internally call shp.parseZip()
+            this.geojson=geojson
+            });
+          }
+        }
+       }
+    }
 </script>
