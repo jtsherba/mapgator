@@ -106,6 +106,7 @@
   import axios from 'axios';
   import shp from 'shpjs';
   import LeafletMap from './components/LeafletMap';
+  import * as turf from '@turf/turf'
   export default {
     name: 'app',
     components: {
@@ -122,6 +123,8 @@
       geojson:null,
       chosenFile: null,
       msg:null,
+      tigerPolygons:null,
+      intersections:[],
     }),
   methods:{
     onAddFiles() {
@@ -150,16 +153,70 @@
           console.error(error);
         });
     },
+    getTigerPolygons() {
+      let bbox = turf.bbox(this.geojson);
+      console.log(bbox)
+      const tigerPath = 'https://tigerweb.geo.census.gov/arcgis/rest/services/Generalized_ACS2019/Tracts_Blocks/MapServer/3/query?where=&text=&objectIds=&time=&geometry=-123.17382500000001%2C+37.639829999999996%2C+-122.28178%2C+37.929823999999996&geometryType=esriGeometryEnvelope&inSR=4269&spatialRel=esriSpatialRelIntersects&distance=&units=esriSRUnit_Foot&relationParam=&outFields=&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&havingClause=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinctValues=false&resultOffset=&resultRecordCount=&returnExtentOnly=false&datumTransformation=&parameterValues=&rangeValues=&quantizationParameters=&featureEncoding=esriDefault&f=geojson';
+      axios.get(tigerPath)
+        .then((res) => {
+          console.log("test")
+          this.tigerPolygons = res.data;
+          this.calculatePercentOverlay()
+          
+        })
+        .catch((error) => {
+          // eslint-disable-next-line
+          console.error(error);
+        });
+      
+      //const response = await fetch("https://tigerweb.geo.census.gov/arcgis/rest/services/Generalized_ACS2019/Tracts_Blocks/MapServer/3/query");
+      //this.tigerPolygons = await response.json();
+      //console.log(this.tigerPolygons)
+    },
+    getACSVariable(){
+      //const response = await fetch("https://api.census.gov/data/2019/acs/acs5/variables.json");
+      //let data = await response.json();
+      //let censusVariable = data["variables"]["B01001A_001E"]
+    },
+    calculatePercentOverlay(){
+      console.log(this.tigerPolygons)
+      console.log(this.geojson)
+      for (const element of this.tigerPolygons.features) {
+
+           for (const element2 of this.geojson.features) {
+            var intersection = turf.intersect(element, element2);
+            if (intersection != null){
+            var polyAPolyBIntersectionPolyAIntersection = turf.intersect(intersection, element2);
+            var polyAArea = turf.area(element2);
+            var polyAPolyBIntersectionPolyAIntersectionArea = turf.area(polyAPolyBIntersectionPolyAIntersection);
+            console.log(polyAArea)
+            console.log(polyAPolyBIntersectionPolyAIntersectionArea)
+// Calculate how much of polyA is covered.
+
+            //var polyACoverage = polyAPolyBIntersectionPolyAIntersectionArea / polyAArea;
+            }
+           
+             
+              //this.intersections.push(polyACoverage)
+              
+        }
+        }
+        console.log(this.intersections)
+
+      
+      
+      
+    },
     async runSummary(){
-      const response = await fetch("https://api.census.gov/data/2019/acs/acs5/variables.json");
-      let data = await response.json();
-      //let censusVariable = data["variables"]
-       const path = 'http://localhost:5000/ping';
+      
+      this.getTigerPolygons()
+     
+      const path = 'http://localhost:5000/ping';
       axios.get(path)
         .then((res) => {
           this.msg = res.data;
           console.log(this.msg)
-          console.log(data)
+          
         })
         .catch((error) => {
           // eslint-disable-next-line
