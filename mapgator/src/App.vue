@@ -209,18 +209,18 @@
     },
     async runSummary(){
       
-      this.getTigerPolygons()
-     
-      const path = 'http://localhost:5000/ping';
-      axios.get(path)
+      //this.getTigerPolygons()
+      let bbox = turf.bbox(this.geojson);
+      const path = 'http://localhost:5000/basicAnalysis';
+      let payload = {'census_variables':["B01001A_001E"], "layer": this.geojson, "bbox":bbox}
+      axios.post(path, payload)
         .then((res) => {
-          this.msg = res.data;
-          console.log(this.msg)
-          
+           console.log(res)
         })
         .catch((error) => {
           // eslint-disable-next-line
-          console.error(error);
+          console.log(error);
+         
         });
          }, 
 
