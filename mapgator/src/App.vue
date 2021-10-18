@@ -43,7 +43,7 @@
                       <v-file-input
                       show-size
                       :rules="rules"
-                      accept=".zip"
+                      accept=".zip,.geojson"
                       placeholder="Pick an zipped shapefile"
                       prepend-icon="mdi-map"
                       label="Shapefile"
@@ -86,15 +86,50 @@
             </v-sheet>
           </v-col>
 
-          <v-col>
+          <v-col cols = "6">
             <v-sheet
               min-height="70vh"
               rounded="lg"
             >
-              <LeafletMap :name="geojson"
+              <LeafletMap :name="geojson" :resultsData="resultsData"
               > </LeafletMap> 
                
             </v-sheet>
+          </v-col>
+          <v-col cols="2" v-if= "showResults">
+               <v-card
+              
+              max-width="344"
+              outlined
+            >
+              <v-list-item three-line>
+                <v-list-item-content>
+                  <div class="text-overline mb-4">
+                    OVERLINE
+                  </div>
+                  <v-list-item-title class="text-h5 mb-1">
+                    Headline 5
+                  </v-list-item-title>
+                  <v-list-item-subtitle>Greyhound divisely hello coldly fonwderfully</v-list-item-subtitle>
+                </v-list-item-content>
+
+                <v-list-item-avatar
+                  tile
+                  size="80"
+                  color="grey"
+                ></v-list-item-avatar>
+              </v-list-item>
+
+              <v-card-actions>
+                <v-btn
+                  outlined
+                  rounded
+                  text
+                >
+                  Button
+                </v-btn>
+              </v-card-actions>
+            </v-card>
           </v-col>
         </v-row>
       </v-container>
@@ -125,22 +160,38 @@
       msg:null,
       tigerPolygons:null,
       intersections:[],
+      loading:false, 
+      showResults:true,
+      resultsData:null
     }),
   methods:{
     onAddFiles() {
       //for the shapefiles in the files folder called pandr.shp
-         
+      if (this.chosenFile == null){
+        return
+      }else if(this.chosenFile.name.endsWith(".geojson")){
+          console.log(this.chosenFile)
+        let reader = new FileReader()
+         reader.readAsText(this.chosenFile)
+          reader.onload = () => {
+            this.geojson = JSON.parse(reader.result);           
+          }
+
+            //Read the file as text.
+  
+      }else{
+          console.log(this.chosenFile)
           let reader = new FileReader()
           reader.readAsArrayBuffer(this.chosenFile)
           reader.onload = () => {
             this.data = reader.result;
              shp(this.data).then((geojson) => {
-            console.log(geojson)
             //see bellow for whats here this internally call shp.parseZip()
             this.geojson=geojson
             });
           }
-        },
+      }
+     },
     getMessage() {
       const path = 'http://localhost:5000/ping';
       axios.get(path)
@@ -179,8 +230,6 @@
       //let censusVariable = data["variables"]["B01001A_001E"]
     },
     calculatePercentOverlay(){
-      console.log(this.tigerPolygons)
-      console.log(this.geojson)
       for (const element of this.tigerPolygons.features) {
 
            for (const element2 of this.geojson.features) {
@@ -201,7 +250,7 @@
               
         }
         }
-        console.log(this.intersections)
+       
 
       
       
@@ -216,6 +265,8 @@
       axios.post(path, payload)
         .then((res) => {
            console.log(res)
+           this.resultsData = res.data.data
+
         })
         .catch((error) => {
           // eslint-disable-next-line

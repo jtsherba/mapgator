@@ -1,4 +1,3 @@
-
 <template>
 
   <div>
@@ -32,11 +31,11 @@ import { latLngBounds } from "leaflet";
 import * as turf from '@turf/turf'
 export default {
   name: "Example",
-  props: {name:Object},
+  props: {name:Object, resultsData:Object},
   watch: {
     name(val) {
       this.loading = true;
-      this.geojson = JSON.parse(JSON.stringify( val));
+      this.geojson = JSON.parse(JSON.stringify(val));
       let bbox = turf.bbox(this.geojson);
       let latlngbbox = latLngBounds([
         [bbox[1], bbox[0]],
@@ -44,6 +43,11 @@ export default {
       ])
       this.bounds=latlngbbox
       this.loading = false;
+    }, 
+    resultsData(val){
+
+      console.log(val)
+      console.log(this.geojson)
     }
   },  
   components: {
@@ -93,15 +97,11 @@ export default {
         return () => {};
       }
       return (feature, layer) => {
-        layer.bindTooltip(
-          "<div>"+feature.properties+"</div>",
-          //"<div>code:" +
-           // feature.properties.code +
-           // "</div><div>nom: " +
-           // feature.properties.nom +
-           // "</div>",
-          { permanent: false, sticky: true }
-        );
+        let attributeHTML = ""
+        for (const [key, value] of Object.entries(feature.properties)) {
+          attributeHTML += "<div>"+ key + ": " + value + "</div>"
+        }
+        layer.bindTooltip(attributeHTML)
       };
     }
   },
