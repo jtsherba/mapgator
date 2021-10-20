@@ -5,18 +5,32 @@
       <span v-if="loading">Loading...</span>
       
     </div>
-   <div id="mapContainer"></div>
+    <l-map
+      :zoom="zoom"
+      :bounds="bounds"  
+      style="height: 500px; width: 100%"
+    >
+      <l-tile-layer
+        :url="url"
+        :attribution="attribution"
+      />
+      <l-geo-json
+        v-if="show"
+        :geojson="geojson"
+        :options="options"
+        :options-style="styleFunction"
+      />
+    </l-map>
   </div>
 </template>
 
 <script>
-import "leaflet/dist/leaflet.css";
-import L from "leaflet";
+import { LMap, LTileLayer, LGeoJson } from "vue2-leaflet";
 import chroma from "chroma-js";
 import { latLngBounds } from "leaflet";
 import * as turf from '@turf/turf'
 export default {
-  name: "Map",
+  name: "Example",
   props: {name:Object, resultsData:Object, selectedAttribute:String},
   watch: {
     selectedAttribute(val){
@@ -31,42 +45,34 @@ export default {
         [bbox[3], bbox[2]]
       ])
       this.bounds=latlngbbox
-      this.map.fitBounds(this.bounds)
-      this.geojsonLayer = L.geoJSON(this.geojson,{style: this.style, onEachFeature:this.onEachFeatureFunction})
-      this.layerGroup = new L.LayerGroup();
-      this.layerGroup.addTo(this.map);
-      this.layerGroup.addLayer(this.geojsonLayer);
-      
-      
       this.loading = false;
     }, 
     resultsData(val){
-      console.log(this.map)
+
+      console.log(val)
+      console.log(this.geojson)
+
       this.geojson.features.forEach(feature => {
-        
+        console.log(feature)
+        console.log(this.attribute)
         let feature_id = feature.properties[this.attribute]
        
         feature.properties["data_value"] = val[feature_id].sample_data
 
       
       });
-      this.layerGroup.removeLayer(this.geojsonLayer);
-
-      this.geojsonLayer = L.geoJSON(this.geojson,{style: function (feature) {
-        return {fillColor: this.getColor(feature.properties.objectid)};
-    }, onEachFeature:this.onEachFeatureFunction})
-      this.geojsonLayer.addTo(this.map)
+    
+    this.geojson.features.splice(0, 0)
     
     }
   },  
-  mounted(){
-    console.log("Test")
-    this.setupLeafletMap();
+  components: {
+    LMap,
+    LTileLayer,
+    LGeoJson,
   },
   data() {
     return {
-      
-      center: [37,7749, -122,4194],
       loading: false,
       show: true,
       enableTooltip: true,
@@ -76,9 +82,6 @@ export default {
         [49, -66],
         [25, -124]
       ]),
-      map:null,
-      layerGroup: null,
-      geojsonLayer:null,
       geojson: null,
       attribute:null,
       fillColor: "#e4ce7f",
@@ -97,7 +100,7 @@ export default {
       };
     },
     
-  getColor2(n) {
+  getColor(n) {
     var mapScale = chroma.scale(this.colorHex).classes(this.classBreaks);
     console.log(n)
     let regionColor = '#ffffff';
@@ -108,7 +111,7 @@ export default {
     }
     return regionColor
     },
-    styleFunction2(feature) {
+    styleFunction(feature) {
       let fillColor = '#08306b'
       if (feature.geojson === null){
         fillColor = '#08306b'
@@ -125,31 +128,13 @@ export default {
         };
       };
     },
-    getColor(d) {
-    return d > 1000 ? '#800026' :
-           d > 500  ? '#BD0026' :
-           d > 200  ? '#E31A1C' :
-           d > 100  ? '#FC4E2A' :
-           d > 50   ? '#FD8D3C' :
-           d > 20   ? '#FEB24C' :
-           d > 10   ? '#FED976' :
-                      '#FFEDA0';
-    },
-   style() {
-    return {
-     
-        fillColor: '#800026',
-        weight: 2,
-        opacity: 1,
-        color: 'white',
-        dashArray: '3',
-        fillOpacity: 0.7
-      
-    };
-    },
     onEachFeatureFunction() {
-   
+      if (!this.enableTooltip) {
+        return () => {};
+      }
       return (feature, layer) => {
+        console.log(feature)
+        console.log(layer)
         let attributeHTML = ""
         for (const [key, value] of Object.entries(feature.properties)) {
           attributeHTML += "<div>"+ key + ": " + value + "</div>"
@@ -158,17 +143,6 @@ export default {
       };
     }
   },
-  methods: {
-   setupLeafletMap: function () {
-     this.map = L.map("mapContainer").fitBounds(this.bounds)//.setView([51.505, -0.09], 13);
-     //const mapDiv = L.map("mapContainer").setView(this.center, 13);
-      L.tileLayer('https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}{r}.png', {
-        maxZoom: 20,
-        attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors',
-        //bounds: this.bounds
-     }).addTo(this.map);
-        },
- },
   async created() {
     //this.loading = true;
     //const response = await fetch("https://rawgit.com/gregoiredavid/france-geojson/master/regions/pays-de-la-loire/communes-pays-de-la-loire.geojson")
@@ -179,6 +153,3 @@ export default {
   }
 };
 </script>
-<style scoped>
-  #mapContainer{height:300px}
-</style>

@@ -53,6 +53,26 @@
                   </v-list-item-content>
                 </v-list-item>
 
+                 <v-list-item
+                  link
+                  color="grey lighten-4"
+                >
+                  <v-list-item-content>
+                    <v-list-item-title>
+                      Select summary attribute
+                    </v-list-item-title>
+                   
+                      <v-select
+                        v-model="selectedAttribute"
+                        :items="attributes"
+                        label="Summary Attribute"
+                        outlined
+                      ></v-select>
+                   
+                  </v-list-item-content>
+                </v-list-item>
+
+
                 <v-divider class="my-2"></v-divider>
 
                 <v-list-item
@@ -91,7 +111,7 @@
               min-height="70vh"
               rounded="lg"
             >
-              <LeafletMap :name="geojson" :resultsData="resultsData"
+              <LeafletMap :name="geojson" :resultsData="resultsData" :selectedAttribute="selectedAttribute"
               > </LeafletMap> 
                
             </v-sheet>
@@ -162,7 +182,9 @@
       intersections:[],
       loading:false, 
       showResults:true,
-      resultsData:null
+      resultsData:null, 
+      attributes:[],
+      selectedAttribute:null,
     }),
   methods:{
     onAddFiles() {
@@ -175,6 +197,7 @@
          reader.readAsText(this.chosenFile)
           reader.onload = () => {
             this.geojson = JSON.parse(reader.result);           
+            this.updateAttributeSelection()
           }
 
             //Read the file as text.
@@ -188,10 +211,18 @@
              shp(this.data).then((geojson) => {
             //see bellow for whats here this internally call shp.parseZip()
             this.geojson=geojson
+            
+            this.updateAttributeSelection()
             });
           }
       }
      },
+    updateAttributeSelection(){
+      console.log("test")
+      console.log(this.geojson.features[0].properties)
+       this.attributes = Object.keys(this.geojson.features[0].properties)
+       this.selectedAttribute = this.attributes[0]
+    }, 
     getMessage() {
       const path = 'http://localhost:5000/ping';
       axios.get(path)
@@ -261,7 +292,7 @@
       //this.getTigerPolygons()
       let bbox = turf.bbox(this.geojson);
       const path = 'http://localhost:5000/basicAnalysis';
-      let payload = {'census_variables':["B01001A_001E"], "layer": this.geojson, "bbox":bbox}
+      let payload = {'census_variables':["B01001A_001E"], "layer": this.geojson, "bbox":bbox, "summary_attribute": this.selectedAttribute}
       axios.post(path, payload)
         .then((res) => {
            console.log(res)

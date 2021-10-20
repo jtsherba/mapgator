@@ -41,7 +41,7 @@ def run_basic_anlysis(post_data):
     layer_df= layer_df.to_crs({'init': 'epsg:3857'})
     layer_df["area_layer"] = layer_df['geometry'].area
     bbox = post_data["bbox"]
-    layer_id = "id"
+    layer_id = post_data["summary_attribute"]
 
     # set geo variables for api call
     tract_code = "*"
