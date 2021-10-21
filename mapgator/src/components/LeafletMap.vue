@@ -41,7 +41,37 @@ export default {
       this.loading = false;
     }, 
     resultsData(val){
-      console.log(this.map)
+    
+   
+
+    
+    let allValues = []
+    Object.entries(val).forEach(feature => {
+      if (feature[0] !=="sf"){
+        allValues.push(parseInt(parseFloat(feature[1].sample_data)))
+      }
+    })
+
+    let max_of_array = Math.max.apply(Math, allValues)
+    let min_of_array = Math.min.apply(Math, allValues)
+    let classBreaks = this.equalIntervals(min_of_array, max_of_array, 8)
+
+    //let classBreaks = [1,50,100,250,500,1000,2000,3000,6000,9000];
+    let colorHex = ['#deebf7','#08306b'];
+    function  getColor2(n, classBreaks, colorHex) {
+      
+      var mapScale = chroma.scale(colorHex).classes(classBreaks);
+      
+      let regionColor = '#ffffff';
+      if (n === 0) {
+          regionColor = '#ffffff';
+      } else { 
+          regionColor = mapScale(n).hex();
+      }
+    return regionColor
+    }
+
+
       this.geojson.features.forEach(feature => {
         
         let feature_id = feature.properties[this.attribute]
@@ -51,16 +81,45 @@ export default {
       
       });
       this.layerGroup.removeLayer(this.geojsonLayer);
-
+     
+      
       this.geojsonLayer = L.geoJSON(this.geojson,{style: function (feature) {
-        return {fillColor: this.getColor(feature.properties.objectid)};
+  
+        return {
+    
+          weight: 1,
+          color: "#ECEFF1",
+          opacity: 1,
+          fillColor: getColor2(feature.properties.data_value,classBreaks, colorHex),
+          fillOpacity: .8
+        }
+  
     }, onEachFeature:this.onEachFeatureFunction})
       this.geojsonLayer.addTo(this.map)
-    
+      var legend = L.control({position: 'topright'});
+      legend.onAdd = function () {
+          var div = L.DomUtil.create('div', 'legend');
+          div.innerHTML += '<i style="background: #ffffff;"></i>0';
+          //classBreaks.push(999); // add dummy class to extend to get last class color, chroma only returns class.length - 1 colors
+          for (var i = 0; i < classBreaks.length; i++) {
+              if (i+2 === classBreaks.length) {
+                  div.innerHTML += '<i style="background: ' + getColor2(classBreaks[i], classBreaks, colorHex) + ';"></i> ' +
+                  classBreaks[i] + '+';
+                  break
+              } else {
+                  div.innerHTML += '<i style="background: ' + getColor2(classBreaks[i], classBreaks, colorHex) + ';"></i> ' +
+                  classBreaks[i] + '–' + classBreaks[i+1] + '<br>';
+              }
+          }
+          return div;
+      };
+      legend.addTo(this.map);
+      
+      
     }
   },  
   mounted(){
-    console.log("Test")
+
     this.setupLeafletMap();
   },
   data() {
@@ -97,53 +156,14 @@ export default {
       };
     },
     
-  getColor2(n) {
-    var mapScale = chroma.scale(this.colorHex).classes(this.classBreaks);
-    console.log(n)
-    let regionColor = '#ffffff';
-    if (n === 0) {
-        regionColor = '#ffffff';
-    } else { 
-        regionColor = mapScale(n).hex();
-    }
-    return regionColor
-    },
-    styleFunction2(feature) {
-      let fillColor = '#08306b'
-      if (feature.geojson === null){
-        fillColor = '#08306b'
-      }else{
-        fillColor = this.getColor(feature.properties.data_value); // important! need touch fillColor in computed for re-calculate when change fillColor
-      }
-      return () => {
-        return {
-          weight: 2,
-          color: "#ECEFF1",
-          opacity: 1,
-          fillColor: fillColor,
-          fillOpacity: 1
-        };
-      };
-    },
-    getColor(d) {
-    return d > 1000 ? '#800026' :
-           d > 500  ? '#BD0026' :
-           d > 200  ? '#E31A1C' :
-           d > 100  ? '#FC4E2A' :
-           d > 50   ? '#FD8D3C' :
-           d > 20   ? '#FEB24C' :
-           d > 10   ? '#FED976' :
-                      '#FFEDA0';
-    },
    style() {
     return {
      
-        fillColor: '#800026',
-        weight: 2,
+        fillColor: '#fa9fb5',
+        weight: 1,
         opacity: 1,
         color: 'white',
-        dashArray: '3',
-        fillOpacity: 0.7
+        fillOpacity: 0.8
       
     };
     },
@@ -168,6 +188,18 @@ export default {
         //bounds: this.bounds
      }).addTo(this.map);
         },
+
+    equalIntervals: function(low, high, numberOfIntervals){
+        let diff = high-low
+        let eachInterval = diff/numberOfIntervals
+        let outIntervals = []
+        for (let i = 0; i < numberOfIntervals; i++){
+          low+=eachInterval
+          outIntervals.push(low)
+        }
+
+     return outIntervals
+    }
  },
   async created() {
     //this.loading = true;
@@ -179,6 +211,19 @@ export default {
   }
 };
 </script>
-<style scoped>
-  #mapContainer{height:300px}
+<style>
+  #mapContainer{height:450px}
+
+  .legend {
+	line-height: 18px;
+	color: #555;
+  background: #ffffff;
+}
+.legend i {
+	width: 18px;
+	height: 18px;
+	float: left;
+	margin-right: 8px;
+	opacity: 0.7;
+}
 </style>

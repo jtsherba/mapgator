@@ -71,7 +71,43 @@
                    
                   </v-list-item-content>
                 </v-list-item>
-
+                <v-divider class="my-2"></v-divider>
+                <v-list-item
+                  link
+                  color="grey lighten-4"
+                >
+                  <v-list-item-content>
+                    <v-list-item-title>
+                      Select Census Group
+                    </v-list-item-title>
+                   
+                      <v-select
+                        v-model="selectedCensusGroup"
+                        :items="censusGroups"
+                        label="Census Groups"
+                        outlined
+                      ></v-select>
+                   
+                  </v-list-item-content>
+                </v-list-item>
+                <v-list-item
+                  link
+                  color="grey lighten-4"
+                >
+                  <v-list-item-content>
+                    <v-list-item-title>
+                      Select Census Attribute
+                    </v-list-item-title>
+                   
+                      <v-select
+                        v-model="selectedCensusAttribute"
+                        :items="censusAttributes"
+                        label="Census Attribute"
+                        outlined
+                      ></v-select>
+                   
+                  </v-list-item-content>
+                </v-list-item>
 
                 <v-divider class="my-2"></v-divider>
 
@@ -185,8 +221,51 @@
       resultsData:null, 
       attributes:[],
       selectedAttribute:null,
+      selectedCensusAttribute: null,
+      censusAttributes:[],
+      selectedCensusGroup: null,
+      censusGroups:[],
+      groupLookup:null,
     }),
+  mounted(){
+      this.populateCensusDropdowns()
+  },
   methods:{
+    populateCensusDropdowns(){
+      const censusGroupPath = 'https://api.census.gov/data/2019/acs/acs5/groups.json';
+      axios.get(censusGroupPath)
+        .then((res) => {
+          console.log("test")
+          console.log(res.data.groups)
+          let allCensusVariables = []
+          let allgroupLookup = {}
+          res.data.groups.forEach((element) => { 
+                allCensusVariables.push(element.description)
+                allgroupLookup[element.description] = element.variables
+          } )
+          this.censusGroups =  allCensusVariables
+          this.selectedCensusGroup = allCensusVariables[0]
+          this.groupLookup = allgroupLookup
+          
+
+          axios.get(this.groupLookup[this.selectedCensusGroup])
+              .then((res) => {
+               console.log(res)
+                
+                
+              })
+              .catch((error) => {
+                // eslint-disable-next-line
+                console.error(error);
+              });
+          
+        })
+        .catch((error) => {
+          // eslint-disable-next-line
+          console.error(error);
+        });
+       
+    },
     onAddFiles() {
       //for the shapefiles in the files folder called pandr.shp
       if (this.chosenFile == null){
