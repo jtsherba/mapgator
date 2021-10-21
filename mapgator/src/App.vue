@@ -85,6 +85,7 @@
                         v-model="selectedCensusGroup"
                         :items="censusGroups"
                         label="Census Groups"
+                        @change="onChangeGroup($event)"
                         outlined
                       ></v-select>
                    
@@ -226,32 +227,66 @@
       selectedCensusGroup: null,
       censusGroups:[],
       groupLookup:null,
+      variableIDLookup:null,
     }),
   mounted(){
       this.populateCensusDropdowns()
   },
   methods:{
+    onChangeGroup() {
+            //console.log(event.target.value)
+            axios.get(this.groupLookup[this.selectedCensusGroup])
+              .then((res) => {
+               let variableIDLookupAll = {}
+               let variableLabels = []
+               Object.entries(res.data.variables).forEach((element) => { 
+                if (element[0].endsWith("E")){
+                  variableLabels.push(element[1].label)
+                  variableIDLookupAll[element[1].label] = element[0]
+                }
+                } )
+               
+                this.selectedCensusAttribute = variableLabels[0]
+                this.censusAttributes = variableLabels
+                this.variableIDLookup = variableIDLookupAll
+                
+              })
+              .catch((error) => {
+                // eslint-disable-next-line
+                console.error(error);
+              });
+     },
     populateCensusDropdowns(){
       const censusGroupPath = 'https://api.census.gov/data/2019/acs/acs5/groups.json';
       axios.get(censusGroupPath)
         .then((res) => {
-          console.log("test")
-          console.log(res.data.groups)
-          let allCensusVariables = []
+         
+          let allCensusGroupVariables = []
           let allgroupLookup = {}
           res.data.groups.forEach((element) => { 
-                allCensusVariables.push(element.description)
+                allCensusGroupVariables.push(element.description)
                 allgroupLookup[element.description] = element.variables
           } )
-          this.censusGroups =  allCensusVariables
-          this.selectedCensusGroup = allCensusVariables[0]
+          this.censusGroups =  allCensusGroupVariables
+          this.selectedCensusGroup = allCensusGroupVariables[0]
           this.groupLookup = allgroupLookup
           
 
           axios.get(this.groupLookup[this.selectedCensusGroup])
               .then((res) => {
-               console.log(res)
+              
+               let variableIDLookupAll = {}
+               let variableLabels = []
+               Object.entries(res.data.variables).forEach((element) => { 
+                if (element[0].endsWith("E")){
+                  variableLabels.push(element[1].label)
+                  variableIDLookupAll[element[1].label] = element[0]
+                }
+                } )
                 
+                this.selectedCensusAttribute = variableLabels[0]
+                this.censusAttributes = variableLabels
+                this.variableIDLookup = variableIDLookupAll
                 
               })
               .catch((error) => {
@@ -271,7 +306,7 @@
       if (this.chosenFile == null){
         return
       }else if(this.chosenFile.name.endsWith(".geojson")){
-          console.log(this.chosenFile)
+      
         let reader = new FileReader()
          reader.readAsText(this.chosenFile)
           reader.onload = () => {
@@ -282,7 +317,7 @@
             //Read the file as text.
   
       }else{
-          console.log(this.chosenFile)
+          
           let reader = new FileReader()
           reader.readAsArrayBuffer(this.chosenFile)
           reader.onload = () => {
@@ -297,8 +332,7 @@
       }
      },
     updateAttributeSelection(){
-      console.log("test")
-      console.log(this.geojson.features[0].properties)
+    
        this.attributes = Object.keys(this.geojson.features[0].properties)
        this.selectedAttribute = this.attributes[0]
     }, 
@@ -307,7 +341,7 @@
       axios.get(path)
         .then((res) => {
           this.msg = res.data;
-          console.log(this.msg)
+          
         })
         .catch((error) => {
           // eslint-disable-next-line
@@ -315,8 +349,8 @@
         });
     },
     getTigerPolygons() {
-      let bbox = turf.bbox(this.geojson);
-      console.log(bbox)
+      //let bbox = turf.bbox(this.geojson);
+   
       const tigerPath = 'https://tigerweb.geo.census.gov/arcgis/rest/services/Generalized_ACS2019/Tracts_Blocks/MapServer/3/query?where=&text=&objectIds=&time=&geometry=-123.17382500000001%2C+37.639829999999996%2C+-122.28178%2C+37.929823999999996&geometryType=esriGeometryEnvelope&inSR=4269&spatialRel=esriSpatialRelIntersects&distance=&units=esriSRUnit_Foot&relationParam=&outFields=&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&havingClause=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinctValues=false&resultOffset=&resultRecordCount=&returnExtentOnly=false&datumTransformation=&parameterValues=&rangeValues=&quantizationParameters=&featureEncoding=esriDefault&f=geojson';
       axios.get(tigerPath)
         .then((res) => {
@@ -339,42 +373,20 @@
       //let data = await response.json();
       //let censusVariable = data["variables"]["B01001A_001E"]
     },
-    calculatePercentOverlay(){
-      for (const element of this.tigerPolygons.features) {
-
-           for (const element2 of this.geojson.features) {
-            var intersection = turf.intersect(element, element2);
-            if (intersection != null){
-            var polyAPolyBIntersectionPolyAIntersection = turf.intersect(intersection, element2);
-            var polyAArea = turf.area(element2);
-            var polyAPolyBIntersectionPolyAIntersectionArea = turf.area(polyAPolyBIntersectionPolyAIntersection);
-            console.log(polyAArea)
-            console.log(polyAPolyBIntersectionPolyAIntersectionArea)
-// Calculate how much of polyA is covered.
-
-            //var polyACoverage = polyAPolyBIntersectionPolyAIntersectionArea / polyAArea;
-            }
-           
-             
-              //this.intersections.push(polyACoverage)
-              
-        }
-        }
-       
-
-      
-      
-      
-    },
+    
     async runSummary(){
       
       //this.getTigerPolygons()
       let bbox = turf.bbox(this.geojson);
+      this.selectedCensusAttribute
+      
+      let singleCensusVariable = this.variableIDLookup[this.selectedCensusAttribute]
       const path = 'http://localhost:5000/basicAnalysis';
-      let payload = {'census_variables':["B01001A_001E"], "layer": this.geojson, "bbox":bbox, "summary_attribute": this.selectedAttribute}
+      let payload = {'census_variables':[singleCensusVariable], "layer": this.geojson, "bbox":bbox, "summary_attribute": this.selectedAttribute}
+      console.log(payload)
       axios.post(path, payload)
         .then((res) => {
-           console.log(res)
+        
            this.resultsData = res.data.data
 
         })

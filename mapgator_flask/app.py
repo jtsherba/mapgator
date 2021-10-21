@@ -59,7 +59,7 @@ def run_basic_anlysis(post_data):
     percent_overlay_df = percent_overlay(tiger_df, layer_df)
     percent_overlay_dict = prep_percent_overlay(percent_overlay_df, layer_id)
 
-    all_calc_data = calc_basic_census_data(df, percent_overlay_dict)
+    all_calc_data = calc_basic_census_data(df, percent_overlay_dict, attribute_ids[0])
     
     return all_calc_data
 

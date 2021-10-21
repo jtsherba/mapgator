@@ -212,7 +212,8 @@ export default {
 };
 </script>
 <style>
-  #mapContainer{height:450px}
+  #mapContainer{height:450px;
+                z-index: 1}
 
   .legend {
 	line-height: 18px;

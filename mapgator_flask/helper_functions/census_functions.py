@@ -88,7 +88,7 @@ def calc_socio_economic_data(df, block_group_lookup):
     #return calc dictionary
     return all_calc_data
 
-def calc_basic_census_data(df, block_group_lookup):
+def calc_basic_census_data(df, block_group_lookup, census_variable):
     # create empty dictionary to add calculated attribute information to
     all_calc_data = defaultdict(dict) 
     # calculate all stats for each neighborhood
@@ -113,6 +113,6 @@ def calc_basic_census_data(df, block_group_lookup):
         all_calc_data_nb = all_calc_data[str(nb_name)]
         # population
         print(tract_df)
-        all_calc_data_nb["sample_data"] = calc_sum(tract_df, 'B01001A_001E')
+        all_calc_data_nb["sample_data"] = calc_sum(tract_df, census_variable)
 
     return all_calc_data
