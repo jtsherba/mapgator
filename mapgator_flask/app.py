@@ -66,7 +66,7 @@ def run_basic_anlysis(post_data):
 # function builds the api URL from tract_code, state_code, county_code, and attribute ids. 
 def build_census_url(tract_code, state_code, county_code, attribute_ids):
     attributes = ','.join(attribute_ids)
-    census_url = r'https://api.census.gov/data/2019/acs/acs5?get={}&in=state:{}&in=county:{}&for=tract:{}'\
+    census_url = r'https://api.census.gov/data/2019/acs/acs5/profile?get={}&in=state:{}&in=county:{}&for=tract:{}'\
                 .format(attributes, state_code, county_code, tract_code)
     return census_url
 

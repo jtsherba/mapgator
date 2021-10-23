@@ -23,6 +23,14 @@ export default {
         this.attribute = val
     }, 
     name(val) {
+      if ("empty" in val){
+        console.log(this.map)
+        
+        this.layerGroup.removeLayer(this.geojsonLayer);
+        
+
+        
+      }else{
       this.loading = true;
       this.geojson = JSON.parse(JSON.stringify(val));
       let bbox = turf.bbox(this.geojson);
@@ -39,11 +47,9 @@ export default {
       
       
       this.loading = false;
+      }
     }, 
     resultsData(val){
-    
-   
-
     
     let allValues = []
     Object.entries(val).forEach(feature => {
@@ -95,9 +101,13 @@ export default {
         }
   
     }, onEachFeature:this.onEachFeatureFunction})
+      this.layerGroup.addLayer(this.geojsonLayer);
       this.geojsonLayer.addTo(this.map)
-      var legend = L.control({position: 'topright'});
-      legend.onAdd = function () {
+      if (this.legend != null){
+        this.map.removeControl(this.legend);
+      }
+      this.legend = L.control({position: 'topright'});
+      this.legend.onAdd = function () {
           var div = L.DomUtil.create('div', 'legend');
           div.innerHTML += '<i style="background: #ffffff;"></i>0';
           //classBreaks.push(999); // add dummy class to extend to get last class color, chroma only returns class.length - 1 colors
@@ -113,7 +123,7 @@ export default {
           }
           return div;
       };
-      legend.addTo(this.map);
+      this.legend.addTo(this.map);
       
       
     }
@@ -124,7 +134,7 @@ export default {
   },
   data() {
     return {
-      
+      legend:null,
       center: [37,7749, -122,4194],
       loading: false,
       show: true,
@@ -182,9 +192,9 @@ export default {
    setupLeafletMap: function () {
      this.map = L.map("mapContainer").fitBounds(this.bounds)//.setView([51.505, -0.09], 13);
      //const mapDiv = L.map("mapContainer").setView(this.center, 13);
-      L.tileLayer('https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}{r}.png', {
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
         maxZoom: 20,
-        attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors',
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
         //bounds: this.bounds
      }).addTo(this.map);
         },
@@ -213,7 +223,8 @@ export default {
 </script>
 <style>
   #mapContainer{height:450px;
-                z-index: 1}
+                z-index: 1;
+                margin-right:20px}
 
   .legend {
 	line-height: 18px;
