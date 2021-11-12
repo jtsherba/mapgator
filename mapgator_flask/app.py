@@ -28,8 +28,7 @@ def process_request():
     
 
     response_object = {'status': 'success','data':all_calc_data}
-    #resp = jsonify(message)
-    #resp.status_code = 200
+   
     return jsonify(response_object)
 
 def run_basic_anlysis(post_data):
